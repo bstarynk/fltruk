@@ -47,6 +47,10 @@
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Box.H>
 
+
+/// HJSON from https://github.com/hjson/hjson-cpp
+#include "hjson/hjson.h"
+
 extern "C" void* fltruk_proghdl; // for dlopen
 extern "C" int fltruk_prog_arg_cnt(void);
 
