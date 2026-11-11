@@ -23,6 +23,8 @@
  *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ***/
 
+#define FLTRUK_INCLUDED 1
+
 #ifndef FLTRUK_SHORTGIT
 #error FLTRUK_SHORTGIT should be defined in compilation command
 #endif
