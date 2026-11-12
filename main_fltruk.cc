@@ -97,7 +97,7 @@ arghandle_fltruk(int argc, char**argv, int &i)
     }
     else if (i+1<argc && (strcmp("-A", argv[i]) == 0
                           || strcmp("--arg", argv[i]) == 0)) {
-        fltruk_curarg = std::string(argv[i]+1);
+        fltruk_curarg = std::string(argv[i+1]);
         FLTRUK_VERBOSE("program argument #%d set argument to %s",
                        i, fltruk_curarg.c_str());
         i += 2;
@@ -106,14 +106,16 @@ arghandle_fltruk(int argc, char**argv, int &i)
     else if (i+1<argc && (strcmp("-P", argv[i]) == 0
                           || strcmp("--plugin", argv[i]) == 0)) {
         typedef bool init_rout_t (const char*);
-        const char*plugin_name = (argv[i]+1);
+        const char*plugin_name = (argv[i+1]);
+        FLTRUK_VERBOSE("%s loading plugin %s",
+                       fltruk_program_name(), plugin_name);
         void* plughdl = dlopen(plugin_name, RTLD_NOW | RTLD_GLOBAL);
         if (!plughdl) {
             FLTRUK_WARNING("%s failed to dlopen %s: %s",
                            fltruk_program_name (), plugin_name,
                            dlerror());
             exit (EXIT_FAILURE);
-        }
+        };
         FLTRUK_VERBOSE("%s dlopened plugin %s",
                        fltruk_program_name(), plugin_name);
         void*initad = dlsym(plughdl, "fltruk_init");
