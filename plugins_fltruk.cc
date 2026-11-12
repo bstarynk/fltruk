@@ -145,4 +145,10 @@ fltruk_compile_plugins(void)
 } // end compile_plugins_fltruk
 
 
+/********
+ ** for GNU emacs...
+ ** Local-Variables: ;;
+ ** compile-command: "make -j3" ;;
+ ** End: ;;
+ *********/
 // end of file fltruk/plugins_fltruk.cc
