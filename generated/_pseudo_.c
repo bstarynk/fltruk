@@ -24,6 +24,7 @@
  ***/
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 /// every plugin needs one
 bool
