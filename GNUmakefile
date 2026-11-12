@@ -16,7 +16,7 @@ OBJECTFILES=$(patsubst %.cc, obj/%.o, $(SOURCEFILES))
 all: fltruk | GNUmakefile
 
 clean:
-	/bin/rm -vf *~ obj/*.o obj/*.so fltruk _*_.cc *.i *~ *%
+	/bin/rm -vf *~ obj/*.o obj/*.so fltruk _*_.cc *.i *~ *% _*_.c
 
 indent:
 	$(ASTYLE) -v $(wildcard [a-z]*.cc [a-z]*.hh)

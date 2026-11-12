@@ -1,4 +1,5 @@
 #ifndef FLTRUK_INCLUDED
+#define FLTRUK_INCLUDED
 /****************************************************************
  * file fltruk/fltruk.hh
  * SPDX-License-Identifier: GPL-3.0-or-later
