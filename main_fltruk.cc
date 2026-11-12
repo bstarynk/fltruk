@@ -42,8 +42,16 @@ usage_fltruk(void)
               << "\t --version | -V                    # give version"
               << std::endl
               << "\t --verbose | -v                    # verbose messages (FLTRUK_VERBAL)"
-              << std::endl;
-    std::clog << "\t# cf github.com/bstarynk/fltruk" << std::endl;
+              << std::endl
+              << "\t --arg | -A <ARGSTR>               # set argument for next plugin"
+              << std::endl
+              << "\t --plugin | -P <PLUGIN>            # dlopen this plugin"
+              << std::endl
+              << "\t                                   # call its fltruk_init function"
+              << std::endl
+              << "\t                                   # with the const char* <ARGSTR>"
+              << std::endl
+              << "\t# cf github.com/bstarynk/fltruk" << std::endl;
 } // end usage_fltruk
 
 static void
@@ -88,10 +96,45 @@ arghandle_fltruk(int argc, char**argv, int &i)
         return 1;
     }
     else if (i+1<argc && (strcmp("-A", argv[i]) == 0
-			  || strcmp("--arg", argv[i]) == 0)) {
-      fltruk_curarg = std::string(argv[i]+1);
-      i += 2;
-      return 2;
+                          || strcmp("--arg", argv[i]) == 0)) {
+        fltruk_curarg = std::string(argv[i]+1);
+        FLTRUK_VERBOSE("program argument #%d set argument to %s",
+                       i, fltruk_curarg.c_str());
+        i += 2;
+        return 2;
+    }
+    else if (i+1<argc && (strcmp("-P", argv[i]) == 0
+                          || strcmp("--plugin", argv[i]) == 0)) {
+        typedef bool init_rout_t (const char*);
+        const char*plugin_name = (argv[i]+1);
+        void* plughdl = dlopen(plugin_name, RTLD_NOW | RTLD_GLOBAL);
+        if (!plughdl) {
+            FLTRUK_WARNING("%s failed to dlopen %s: %s",
+                           fltruk_program_name (), plugin_name,
+                           dlerror());
+            exit (EXIT_FAILURE);
+        }
+        FLTRUK_VERBOSE("%s dlopened plugin %s",
+                       fltruk_program_name(), plugin_name);
+        void*initad = dlsym(plughdl, "fltruk_init");
+        if (!initad) {
+            FLTRUK_WARNING("%s failed to dlsym fltruk_init in %s: %s",
+                           fltruk_program_name (), plugin_name,
+                           dlerror());
+            exit (EXIT_FAILURE);
+        };
+        bool ok = ((init_rout_t*)initad) (fltruk_curarg.c_str());
+        if (!ok) {
+            FLTRUK_WARNING("%s failed to run fltruk_init (%s) in plugin %s",
+                           fltruk_program_name (), fltruk_curarg.c_str(),
+                           plugin_name);
+            exit(EXIT_FAILURE);
+        }
+        FLTRUK_VERBOSE("%s did run fltruk_init (%s) in plugin %s",
+                       fltruk_program_name (), fltruk_curarg.c_str(),
+                       plugin_name);
+        i += 2;
+        return 2;
     }
     return 0;
 } // end arghandle_fltruk
