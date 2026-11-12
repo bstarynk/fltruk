@@ -105,7 +105,6 @@ arghandle_fltruk(int argc, char**argv, int &i)
     }
     else if (i+1<argc && (strcmp("-P", argv[i]) == 0
                           || strcmp("--plugin", argv[i]) == 0)) {
-        typedef bool init_rout_t (const char*);
         const char*plugin_name = (argv[i+1]);
         FLTRUK_VERBOSE("%s loading plugin %s",
                        fltruk_program_name(), plugin_name);
@@ -130,7 +129,7 @@ arghandle_fltruk(int argc, char**argv, int &i)
                        fltruk_program_name(),  plugin_name, initad,
                        fltruk_curarg.c_str());
         fflush (nullptr);
-        bool ok = ((init_rout_t*)initad) (fltruk_curarg.c_str());
+        bool ok = ((fltruk_init_rout_t*)initad) (fltruk_curarg.c_str());
         if (!ok) {
             FLTRUK_WARNING("%s failed to run fltruk_init (%s) in plugin %s",
                            fltruk_program_name (), fltruk_curarg.c_str(),
@@ -203,6 +202,28 @@ fltruk_fetch_prog_arg(int rk)
         return fltruk_prog_argv[rk];
     return nullptr;
 } // end fltruk_fetch_prog_arg
+
+
+void*
+fltruk_dlsym(const char*name)
+{
+    void* ad = nullptr;
+    if (name || !isalpha(name[0])) {
+        FLTRUK_WARNING("%s calling fltruk_dlsym with bad name",
+                       fltruk_prog_argv[0]);
+        return nullptr;
+    }
+    assert (fltruk_proghdl != nullptr);
+    ad = dlsym(fltruk_proghdl, name);
+    if (!ad) {
+        FLTRUK_WARNING("%s fltruk_dlsym fails with name %s",
+                       fltruk_prog_argv[0], name);
+        return nullptr;
+    }
+    FLTRUK_VERBOSE("%s fltruk_dlsym %s -> %p",
+                   fltruk_prog_argv[0], name, ad);
+    return ad;
+}				 // end fltruk_dlsym
 
 
 extern "C" const char*source_directory_fltruk[]; // in generated _listfiles_.cc
