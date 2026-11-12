@@ -125,6 +125,11 @@ arghandle_fltruk(int argc, char**argv, int &i)
                            dlerror());
             exit (EXIT_FAILURE);
         };
+        FLTRUK_VERBOSE("%s running in plugin %s"
+                       " its fltruk_init (@%p) with '%s'",
+                       fltruk_program_name(),  plugin_name, initad,
+                       fltruk_curarg.c_str());
+        fflush (nullptr);
         bool ok = ((init_rout_t*)initad) (fltruk_curarg.c_str());
         if (!ok) {
             FLTRUK_WARNING("%s failed to run fltruk_init (%s) in plugin %s",
