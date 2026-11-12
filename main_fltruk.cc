@@ -32,6 +32,7 @@ volatile bool verbose_fltruk;
 static int fltruk_prog_argc;
 static const char**fltruk_prog_argv;
 
+static std::string fltruk_curarg;
 static void
 usage_fltruk(void)
 {
@@ -56,6 +57,11 @@ version_fltruk(void)
               << " & starynkevitch.net/Basile" << std::endl;
 } // end version_fltruk
 
+/*** our arghandle_fltruk function should
+ * Returns 2 if argv[i] matches with required parameter in argv[i+1],
+ * returns 1 if argv[i] matches on its own,
+ * returns 0 if argv[i] does not match.
+ ***/
 static int
 arghandle_fltruk(int argc, char**argv, int &i)
 {
@@ -80,6 +86,12 @@ arghandle_fltruk(int argc, char**argv, int &i)
         verbose_fltruk = true;
         i++;
         return 1;
+    }
+    else if (i+1<argc && (strcmp("-A", argv[i]) == 0
+			  || strcmp("--arg", argv[i]) == 0)) {
+      fltruk_curarg = std::string(argv[i]+1);
+      i += 2;
+      return 2;
     }
     return 0;
 } // end arghandle_fltruk
@@ -169,5 +181,10 @@ main(int argc, char**argv)
     return 0;
 } // end main
 
-
-// end of file main-fltruk.c
+/********
+ ** for GNU emacs...
+ ** Local-Variables: ;;
+ ** compile-command: "make -j3" ;;
+ ** End: ;;
+ *********/
+// end of file fltruk/main-fltruk.cc
