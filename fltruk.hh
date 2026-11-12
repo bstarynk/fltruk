@@ -1,5 +1,5 @@
 #ifndef FLTRUK_INCLUDED
-#define FLTRUK_INCLUDED
+#define FLTRUK_INCLUDED 1
 /****************************************************************
  * file fltruk/fltruk.hh
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -24,7 +24,7 @@
  *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ***/
 
-#define FLTRUK_INCLUDED 1
+
 
 #ifndef FLTRUK_SHORTGIT
 #error FLTRUK_SHORTGIT should be defined in compilation command
@@ -110,4 +110,14 @@ extern "C" void verbal_at_fltruk(const char*fil, int lin, const char*fun); // fo
 
 class value_Fltruk {
 };
+
+
+
+/********
+ ** for GNU emacs...
+ ** Local-Variables: ;;
+ ** compile-command: "make -j3" ;;
+ ** End: ;;
+ *********/
+// end of file fltruk/fltruk.hh
 #endif /*FLTRUK_INCLUDED*/
