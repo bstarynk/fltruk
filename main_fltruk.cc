@@ -205,10 +205,10 @@ fltruk_fetch_prog_arg(int rk)
 
 
 void*
-fltruk_dlsym(const char*name)
+fltruk_dlsym (const char*name)
 {
     void* ad = nullptr;
-    if (name || !isalpha(name[0])) {
+    if (!name || !isalpha(name[0])) {
         FLTRUK_WARNING("%s calling fltruk_dlsym with bad name",
                        fltruk_prog_argv[0]);
         return nullptr;
