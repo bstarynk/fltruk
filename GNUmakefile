@@ -22,7 +22,7 @@ indent:
 	$(ASTYLE) -v $(wildcard [a-z]*.cc [a-z]*.hh)
 
 _listfiles_.c: | GNUmakefile
-	-cp -f $@ $$HOME/tmp/
+	-@cp -f $@ $$HOME/tmp/
 	printf "/// generated (in github.com/bstarynk/fltruk) file %s\n" $@ > $@
 	printf "const char source_directory_fltruk[] = \"%s\";\n" $(realpath .) >> $@
 	printf "const char* source_files_fltruk[] = {\n" >> $@
@@ -55,3 +55,12 @@ fltruk: $(OBJECTFILES) obj/_listfiles_.o | GNUmakefile
 	$(CXX) $(OPTIM) -g $(OBJECTFILES) obj/_listfiles_.o $(shell fltk-config --ldflags) -o $@
 
 #obj/main-fltruk.o: main-fltruk.cc
+
+####
+## for GNU emacs...
+## Local-Variables: ;;
+## compile-command: "make -j3" ;;
+## End: ;;
+####
+
+# end of file fltrk/GNUmakefile
