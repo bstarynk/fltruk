@@ -63,7 +63,11 @@ typedef void fltruk_source_file_handler_t (const char*, int, void*);
 extern "C" void fltruk_do_every_source_file(fltruk_source_file_handler_t*p, void*data);
 extern "C" void fltruk_compile_plugins(void);
 extern "C" volatile bool verbose_fltruk;
+extern "C" void* fltruk_dlopen(const char*plugin, const char*arg);
+extern "C" void* fltruk_dlsym(const char*symname);
 
+// every dlopened plugin should have a fltruk_init function of signature
+typedef bool fltruk_init_rout_t (const char*);
 
 extern "C" void warned_at_fltruk(const char*fil, int lin, const char*fun); // for GDB
 #define FLTRUK_WARNING_AT2(Fil,Lin,Func,Fmt,...) do {           \
