@@ -22,6 +22,8 @@
  *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ***/
 #include "fltruk.hh"
+#include <elf.h>
+#include <stdio.h>
 
 extern "C" const char plugins_fltruk_git[] = FLTRUK_SHORTGIT;
 extern "C" const char plugins_fltruk_base[] = FLTRUK_BASE;
@@ -144,6 +146,71 @@ fltruk_compile_plugins(void)
                    compilcnt);
 } // end compile_plugins_fltruk
 
+void*
+fltruk_dlopen(const char*plugin, const char*arg)
+{
+    char buf[8];
+    memset(buf, 0, sizeof(buf));
+    if (!plugin || !plugin[0] || !strstr(plugin, ".so")) {
+        FLTRUK_WARNING("invalid plugin (%s) to fltruk_dlopen",
+                       plugin?:"<€null>");
+        return nullptr;
+    }
+    if (!arg) {
+        FLTRUK_WARNING("missing arg to plugin %s",plugin);
+        return nullptr;
+    }
+    FLTRUK_VERBOSE("%s fltruk_dlopen plugin:%s arg:%s",
+                   fltruk_program_name(), plugin, arg);
+    FILE* f = fopen(plugin, "rb");
+    if (!f) {
+        FLTRUK_WARNING("% fltruk_dlopen failed to read plugin %s: %s",
+                       fltruk_program_name(), plugin, strerror(errno));
+        return nullptr;
+    };
+    if (fread(buf, sizeof(buf), 1, f) == 0) {
+        FLTRUK_WARNING("% fltruk_dlopen failed to read first "
+                       " %d bytes in plugin %s: %s",
+                       fltruk_program_name(), (int)sizeof(buf),
+                       plugin, strerror(errno));
+        fclose(f);
+        return nullptr;
+    };
+    if (buf[0] != EI_MAG0 || buf[1] != EI_MAG1
+            || buf[2] != EI_MAG2 || buf[3] != EI_MAG3) {
+        FLTRUK_WARNING("% fltruk_dlopen bad plugin %s start",
+                       fltruk_program_name(), plugin);
+        fclose(f);
+        return nullptr;
+    }
+    fclose(f), f= nullptr;
+    void* dlh = dlopen(plugin, RTLD_NOW);
+    if (!dlh) {
+        FLTRUK_WARNING("% fltruk_dlopen failed to dlopen plugin %s: %s",
+                       fltruk_program_name(), plugin, dlerror());
+        return nullptr;
+    };
+    void *iniad = dlsym(dlh, "fltruk_init");
+    if (!iniad) {
+        FLTRUK_WARNING("% fltruk_dlopen failed to dlsym fltruk_init"
+                       " in plugin %s: %s",
+                       fltruk_program_name(), plugin, dlerror());
+        dlclose(dlh);
+        return nullptr;
+    }
+    bool ok =  (*(fltruk_init_rout_t*)iniad) (arg);
+    if (!ok) {
+        FLTRUK_WARNING("% fltruk_dlopen failed to initialize plugin %s with arg %s",
+                       fltruk_program_name(), plugin, arg);
+        dlclose(dlh);
+        return nullptr;
+    };
+    FLTRUK_VERBOSE("%s did fltruk_dlopen plugin %s arg %s -> %p",
+                   fltruk_program_name(), plugin, arg, dlh);
+    return dlh;
+} // end fltruk_dlopen
+
+// fltruk_dlsym is in main_fltruk.cc
 
 /********
  ** for GNU emacs...
