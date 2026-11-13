@@ -184,7 +184,7 @@ fltruk_dlopen(const char*plugin, const char*arg)
         return nullptr;
     }
     fclose(f), f= nullptr;
-    void* dlh = dlopen(plugin, RTLD_NOW);
+    void* dlh = dlopen(plugin, RTLD_NOW | RTLD_GLOBAL);
     if (!dlh) {
         FLTRUK_WARNING("% fltruk_dlopen failed to dlopen plugin %s: %s",
                        fltruk_program_name(), plugin, dlerror());

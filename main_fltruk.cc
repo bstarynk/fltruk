@@ -233,7 +233,7 @@ main(int argc, char**argv)
     int iarg= 0;
     fltruk_prog_argc = argc;
     fltruk_prog_argv = (const char**)argv;
-    fltruk_proghdl = dlopen (NULL, RTLD_NOW);
+    fltruk_proghdl = dlopen (NULL, RTLD_NOW | RTLD_GLOBAL);
     assert (fltruk_proghdl);
     assert (main_fltruk_base);
     assert (main_fltruk_git);
