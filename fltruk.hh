@@ -161,9 +161,13 @@ typedef void fltruk_methsig_t (uint16_t /*selector*/,
                                struct fltruk_Value*,
                                fltruk_Variant);
 
+typedef bool fltruk_marksig_t (struct fltruk_Value* val);
+
 struct fltruk_MethodDict {
     mutable std::recursive_mutex _mtx;
     std::map<uint16_t, fltruk_methsig_t*> _dictmeth;
+#warning perhaps _markfun should be atomic?
+    fltruk_marksig_t* _markfun;
     fltruk_methsig_t* find_meth(uint16_t selnum) const {
         if (selnum == 0)
             return nullptr;
@@ -176,7 +180,11 @@ struct fltruk_MethodDict {
     fltruk_methsig_t* find_meth_sel(fltruk_Selector sel) const {
         return find_meth((uint16_t)sel);
     };
-    fltruk_MethodDict() : _mtx(), _dictmeth() {};
+    void set_marking_fun(fltruk_marksig_t* mfun) {
+        std::lock_guard<std::recursive_mutex> gu(_mtx);
+        _markfun = mfun;
+    };
+    fltruk_MethodDict() : _mtx(), _dictmeth(), _markfun(nullptr) {};
     ~fltruk_MethodDict() {
         std::lock_guard<std::recursive_mutex> gu(_mtx);
         _dictmeth.clear();
