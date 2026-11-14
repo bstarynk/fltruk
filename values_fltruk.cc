@@ -29,11 +29,13 @@ extern "C" const char values_fltruk_base[] = FLTRUK_BASE;
 
 fltruk_MethodDict fltruk_IntV::meth_int_dict;
 
+#warning probably need a static vector of pointers to fltruk_IntV
 uint16_t
 fltruk_IntV::register_int_val(struct fltruk_IntV*p, intptr_t i)
 {
+    assert(p != nullptr && p->valtype() == fltruk_Vtype::IntTy);
 #warning unimplemented fltruk_IntV::register_int_val
-    FLTRUK_VERBOSE("fail to €register_int_val p@%p i=%ld",
+    FLTRUK_VERBOSE("in register_int_val p@%p i=%ld",
                    (void*)p, (long)i);
     asm volatile("nop; nop; nop; nop");
     fflush(nullptr);
@@ -42,15 +44,16 @@ fltruk_IntV::register_int_val(struct fltruk_IntV*p, intptr_t i)
 
 
 
-
+#warning probably need a static vector of pointers to fltruk_DoubleV
 fltruk_MethodDict fltruk_DoubleV::meth_double_dict;
 
 uint16_t
-fltruk_DoubleV::register_double_val(struct fltruk_DoubleV*pd, double x)
+fltruk_DoubleV::register_double_val(struct fltruk_DoubleV*p, double x)
 {
+    assert(p != nullptr && p->valtype() == fltruk_Vtype::DoubleTy);
 #warning unimplemented fltruk_DoubleV::register_double_val
-    FLTRUK_VERBOSE("fail to register_double_val pd@%p x=%g",
-                   (void*)pd, x);
+    FLTRUK_VERBOSE("in register_double_val pd@%p x=%g",
+                   (void*)p, x);
     asm volatile("nop; nop; nop; nop");
     fflush(nullptr);
     throw std::runtime_error("register_double_val");
