@@ -1,5 +1,5 @@
 /****************************************************************
- * file fltruk/main-fltruk.cc
+ * file fltruk/main_fltruk.cc
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Description:
