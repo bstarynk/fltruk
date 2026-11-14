@@ -15,6 +15,8 @@ OBJECTFILES=$(patsubst %.cc, obj/%.o, $(SOURCEFILES))
 .PHONY: all clean indent
 all: fltruk | GNUmakefile
 
+-include generated/$(basename $(first $(MAKECMDGOALS))).mk
+
 clean:
 	/bin/rm -vf *~ obj/*.o obj/*.so fltruk _*_.cc *.i *~ *% _*_.c
 	/bin/rm -vf *.orig *% generated/*orig generated/*%
@@ -46,8 +48,22 @@ obj/%.o: %.c | GNUmakefile get-short-git.sh
              -DFLTRUK_SHORTGIT=\"$(shell ./get-short-git.sh $^)\" \
              -c $< -o $@
 
+#https://stackoverflow.com/a/14061796/841108
+obj/%.so: generated/%.c generated/%.cflags fltruk.hh | GNUmakefile get-short-git.sh
+	@printf "#dotless='%s' dotcir='%s' dotat='%s' cfl='%s'\n" "$<" "$^" "$@" "$(notdir $(basename $<)).cflags"
+	@printf "#MAKECMDGOALS=%s\n" $(MAKECMDGOALS)
+	$(CCACHE) $(CC) -I. -Igenerated/ $$(grep -v '^#' generated/$(notdir $(basename $<)).cflags) -UFLTRUK_GENCFLPLUGIN  -DFLTRUK_BASE=\"$(basename $<)\" -g $(OPTIM) \
+             -DFLTRUK_SHORTGIT=\"$(shell ./get-short-git.sh $^)\" \
+             -c $< -fPIC -shared -o $@
+
 obj/%.so: generated/%.c fltruk.hh | GNUmakefile get-short-git.sh
-	$(CCACHE) $(CC) -UFLTRUK_GENPLUGIN  -DFLTRUK_BASE=\"$(basename $<)\" -g $(OPTIM) \
+	$(CCACHE) $(CC) -I. -Igenerated/ -UFLTRUK_GENPLUGIN  -DFLTRUK_BASE=\"$(basename $<)\" -g $(OPTIM) \
+             -DFLTRUK_SHORTGIT=\"$(shell ./get-short-git.sh $^)\" \
+             -c $< -fPIC -shared -o $@
+
+
+obj/%.so: generated/%.cc fltruk.hh | GNUmakefile get-short-git.sh
+	$(CCACHE) $(CXX) -I. -Igenerated/  -UFLTRUK_GENCXXPLUGIN  -DFLTRUK_BASE=\"$(basename $<)\" -g $(OPTIM) \
              -DFLTRUK_SHORTGIT=\"$(shell ./get-short-git.sh $^)\" \
              -c $< -fPIC -shared -o $@
 
