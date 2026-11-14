@@ -45,6 +45,7 @@
 #include <ostream>
 #include <iostream>
 #include <mutex>
+#include <variant>
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Box.H>
@@ -131,17 +132,45 @@ struct fltruk_FltkV;
 struct fltruk_ObjectV;
 struct fltruk_Value;
 
-#warning should probably define some enum class fltruk_Selector: uint16_t
+
+enum class fltruk_Selector: uint16_t {
+    _NoSel = 0,
+    DestroySel,
+    OutSel,
+    InputSel,
+    StringSel,
+    ConstValSel,
+    HjsonSel,
+    _LastSel
+};
+
+typedef std::variant<void*,
+        std::uintptr_t,
+        std::ostream*,
+        std::istream*,
+        std::string,
+        const fltruk_Value*,
+        Hjson::Value*
+        > fltruk_Variant;
 
 typedef void fltruk_methsig_t (uint16_t /*selector*/,
                                struct fltruk_Value*,
                                struct fltruk_Value*,
                                struct fltruk_Value*,
-                               uintptr_t);
+                               fltruk_Variant);
 
-struct fltruk_MethodDict
-    : public  std::map<uint16_t, fltruk_methsig_t*> {
+struct fltruk_MethodDict {
     mutable std::recursive_mutex _mtx;
+    std::map<uint16_t, fltruk_methsig_t*> _dictmeth;
+    fltruk_methsig_t* find_meth(uint16_t selnum) const {
+        if (selnum == 0)
+            return nullptr;
+        std::lock_guard<std::recursive_mutex> gu(_mtx);
+        auto m = _dictmeth.find(selnum);
+        if (m != _dictmeth.end())
+            return nullptr; //m.second;
+        return nullptr;
+    };                            // end find_meth
 };                              // end fltruk_MethodDict
 
 struct fltruk_Value {
