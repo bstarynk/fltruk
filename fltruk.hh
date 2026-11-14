@@ -41,6 +41,8 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstdio>
+#include <climits>
+#include <cmath>
 #include <fstream>
 #include <ostream>
 #include <iostream>
@@ -239,6 +241,43 @@ struct fltruk_IntV : fltruk_Value {
   };
   intptr_t int_val (void) const { return ival; };
 };				// end struct fltruk_IntV
+
+
+struct fltruk_doubleV : fltruk_Value {
+  const double  dval;
+  static fltruk_MethodDict meth_double_dict;
+  static uint16_t register_double_val(struct fltruk_doubleV*p,
+				      double x);
+  static uint32_t hash_double(double d) {
+    uint32_t h = 0;
+    if (std::isnan(d))
+      return 17;
+    else if (std::isinf(d)) {
+      return (d>0)?13:5641;
+    };
+    double a = fabs(d);
+    if (a < 0.5) {
+      h = (uint32_t) log(a);
+      if (h==0)
+	h = 5639;
+      return h;
+    }
+    else if (a < (double)UINT_MAX/3 && a > -(double)UINT_MAX/3) {
+      h = ((intptr_t)sqrt(a)) + (intptr_t) log(a);
+      if (h != 0)
+	return h;
+    }
+    if (h == 0)
+      h = 5501;
+    return h;
+  }
+  fltruk_doubleV(double v=0)
+    : fltruk_Value(fltruk_Vtype::DoubleTy, hash_double(v),
+		   register_double_val(this, v),
+		   meth_double_dict), dval(v) {
+  };
+  double double_val (void) const { return dval; };
+};				// end struct fltruk_DoubleV
 /********
  ** for GNU emacs...
  ** Local-Variables: ;;
