@@ -44,6 +44,7 @@
 #include <fstream>
 #include <ostream>
 #include <iostream>
+#include <mutex>
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Box.H>
@@ -111,8 +112,56 @@ extern "C" void verbal_at_fltruk(const char*fil, int lin, const char*fun); // fo
 #define FLTRUK_VERBOSE(Fmt,...) \
   FLTRUK_VERBOSE_AT(__FILE__,__LINE__,__func__,Fmt,##__VA_ARGS__)
 
+enum class fltruk_Vtype: uint8_t {
+    _Notype = 0,
+    IntTy,
+    DoubleTy,
+    StringTy,
+    NodeTy,
+    FltkTy,
+    ObjectTy,
+    _LastTy
+};
 
-class value_Fltruk {
+struct fltruk_IntV;
+struct fltruk_DoubleV;
+struct fltruk_StringV;
+struct fltruk_NodeV;
+struct fltruk_FltkV;
+struct fltruk_ObjectV;
+struct fltruk_Value;
+
+#warning should probably define some enum class fltruk_Selector: uint16_t
+
+typedef void fltruk_methsig_t (uint16_t /*selector*/,
+                               struct fltruk_Value*,
+                               struct fltruk_Value*,
+                               struct fltruk_Value*,
+                               uintptr_t);
+
+struct fltruk_MethodDict
+    : public  std::map<uint16_t, fltruk_methsig_t*> {
+    mutable std::recursive_mutex _mtx;
+};                              // end fltruk_MethodDict
+
+struct fltruk_Value {
+    const fltruk_Vtype _vtype;
+    mutable uint8_t _vgc;
+    const uint16_t _vnum;
+    const uint32_t _vhash;
+    const std::shared_ptr<fltruk_MethodDict> _vmethdict;
+protected:
+    fltruk_Value(fltruk_Vtype ty, uint16_t num,
+                 uint32_t hash,fltruk_MethodDict&mdict)
+        : _vtype(ty), _vgc(0), _vnum(num), _vhash(hash),
+          _vmethdict(&mdict) {
+        assert (ty > fltruk_Vtype::_Notype && ty < fltruk_Vtype::_LastTy);
+        assert (num > 0);
+        assert (hash > 0);
+    };
+    ~fltruk_Value() {
+#warning incomplete fltruk_Value destructor
+    };
 };
 
 
