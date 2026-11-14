@@ -25,3 +25,44 @@
 
 extern "C" const char values_fltruk_git[] = FLTRUK_SHORTGIT;
 extern "C" const char values_fltruk_base[] = FLTRUK_BASE;
+
+
+fltruk_MethodDict fltruk_IntV::meth_int_dict;
+
+uint16_t
+fltruk_IntV::register_int_val(struct fltruk_IntV*p, intptr_t i)
+{
+#warning unimplemented fltruk_IntV::register_int_val
+    FLTRUK_VERBOSE("fail to €register_int_val p@%p i=%ld",
+                   (void*)p, (long)i);
+    asm volatile("nop; nop; nop; nop");
+    fflush(nullptr);
+    throw std::runtime_error("register_int_val");
+} // end fltruk_IntV::register_int_val
+
+
+
+
+fltruk_MethodDict fltruk_DoubleV::meth_double_dict;
+
+uint16_t
+fltruk_DoubleV::register_double_val(struct fltruk_DoubleV*pd, double x)
+{
+#warning unimplemented fltruk_DoubleV::register_double_val
+    FLTRUK_VERBOSE("fail to register_double_val pd@%p x=%g",
+                   (void*)pd, x);
+    asm volatile("nop; nop; nop; nop");
+    fflush(nullptr);
+    throw std::runtime_error("register_double_val");
+} // end fltruk_IntV::register_double_val
+
+
+
+
+/********
+ ** for GNU emacs...
+ ** Local-Variables: ;;
+ ** compile-command: "make -j3" ;;
+ ** End: ;;
+ *********/
+// end of file fltruk/values_fltruk.cc

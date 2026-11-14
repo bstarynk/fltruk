@@ -90,7 +90,7 @@ if (asprintf(&buf##FLTRUK_BASE##Lin,Fmt,##__VA_ARGS__)<0)       \
   FLTRUK_WARNING_AT2(Fil,Lin,Func,Fmt,##__VA_ARGS__)
 
 #define FLTRUK_WARNING(Fmt,...) \
-  FLTRUK_WARNING_AT(__FILE__,__LINE__,__func__,##__VA_ARGS__)
+  FLTRUK_WARNING_AT(__FILE__,__LINE__,__func__,Fmt,##__VA_ARGS__)
 
 
 
@@ -174,13 +174,13 @@ struct fltruk_MethodDict {
         return nullptr;
     };                            // end find_meth
     fltruk_methsig_t* find_meth_sel(fltruk_Selector sel) const {
-      return find_meth((uint16_t)sel);
+        return find_meth((uint16_t)sel);
     };
-  fltruk_MethodDict() : _mtx(), _dictmeth() {};
-  ~fltruk_MethodDict() {
-    std::lock_guard<std::recursive_mutex> gu(_mtx);
-    _dictmeth.clear();
-  }
+    fltruk_MethodDict() : _mtx(), _dictmeth() {};
+    ~fltruk_MethodDict() {
+        std::lock_guard<std::recursive_mutex> gu(_mtx);
+        _dictmeth.clear();
+    }
 };                              // end fltruk_MethodDict
 
 struct fltruk_Value {
@@ -197,87 +197,97 @@ protected:
         : _vtype(ty), _vgc(0), _vnum(num), _vhash(hash),
           _vmethdict(&mdict) {
         assert (ty > fltruk_Vtype::_Notype
-		&& ty < fltruk_Vtype::_LastTy);
+                && ty < fltruk_Vtype::_LastTy);
         assert (num > 0);
         assert (hash > 0);
     };
     ~fltruk_Value() {
-      fltruk_methsig_t* dm
-	= _vmethdict->find_meth_sel(fltruk_Selector::DestroySel);
-      if (dm) {
-	dm((uint16_t)fltruk_Selector::DestroySel,
-	   this,nullptr,nullptr,
-	   fltruk_Variant((void*)nullptr));
-      }
+        fltruk_methsig_t* dm
+            = _vmethdict->find_meth_sel(fltruk_Selector::DestroySel);
+        if (dm) {
+            dm((uint16_t)fltruk_Selector::DestroySel,
+               this,nullptr,nullptr,
+               fltruk_Variant((void*)nullptr));
+        }
     };
 public:
-  fltruk_Vtype valtype(void) const { return _vtype; };
-  uint16_t valnum(void) const { return _vnum; };
-  uint32_t valhash(void) const { return _vhash; };
-  fltruk_methsig_t* find_meth(uint16_t selnum) const {
-    return _vmethdict->find_meth(selnum);
-  };
-  fltruk_methsig_t* find_meth_sel(fltruk_Selector sel) const {
-    return _vmethdict->find_meth_sel(sel);
-  };
-};				// end struct fltruk_Value
+    fltruk_Vtype valtype(void) const {
+        return _vtype;
+    };
+    uint16_t valnum(void) const {
+        return _vnum;
+    };
+    uint32_t valhash(void) const {
+        return _vhash;
+    };
+    fltruk_methsig_t* find_meth(uint16_t selnum) const {
+        return _vmethdict->find_meth(selnum);
+    };
+    fltruk_methsig_t* find_meth_sel(fltruk_Selector sel) const {
+        return _vmethdict->find_meth_sel(sel);
+    };
+};                              // end struct fltruk_Value
 
 
 
 struct fltruk_IntV : fltruk_Value {
-  const intptr_t ival;
-  static fltruk_MethodDict meth_int_dict;
-  static uint16_t register_int_val(struct fltruk_IntV*p, intptr_t i);
-  static uint32_t hash_int(intptr_t i) {
-    uint32_t h = (h*4637) ^ (i>>10);
-    if (h == 0)
-      h = (i & 0xfff) + 11;
-    return h;
-  }
-  fltruk_IntV(intptr_t v=0)
-    : fltruk_Value(fltruk_Vtype::IntTy, hash_int(v),
-		   register_int_val(this, v),
-		   meth_int_dict), ival(v) {
-  };
-  intptr_t int_val (void) const { return ival; };
-};				// end struct fltruk_IntV
-
-
-struct fltruk_doubleV : fltruk_Value {
-  const double  dval;
-  static fltruk_MethodDict meth_double_dict;
-  static uint16_t register_double_val(struct fltruk_doubleV*p,
-				      double x);
-  static uint32_t hash_double(double d) {
-    uint32_t h = 0;
-    if (std::isnan(d))
-      return 17;
-    else if (std::isinf(d)) {
-      return (d>0)?13:5641;
+    const intptr_t ival;
+    static fltruk_MethodDict meth_int_dict;
+    static uint16_t register_int_val(struct fltruk_IntV*p, intptr_t i);
+    static uint32_t hash_int(intptr_t i) {
+        uint32_t h = (h*4637) ^ (i>>10);
+        if (h == 0)
+            h = (i & 0xfff) + 11;
+        return h;
+    }
+    fltruk_IntV(intptr_t v=0)
+        : fltruk_Value(fltruk_Vtype::IntTy, hash_int(v),
+                       register_int_val(this, v),
+                       meth_int_dict), ival(v) {
     };
-    double a = fabs(d);
-    if (a < 0.5) {
-      h = (uint32_t) log(a);
-      if (h==0)
-	h = 5639;
-      return h;
+    intptr_t int_val (void) const {
+        return ival;
+    };
+};                              // end struct fltruk_IntV
+
+
+struct fltruk_DoubleV : fltruk_Value {
+    const double  dval;
+    static fltruk_MethodDict meth_double_dict;
+    static uint16_t register_double_val(struct fltruk_DoubleV*p,
+                                        double x);
+    static uint32_t hash_double(double d) {
+        uint32_t h = 0;
+        if (std::isnan(d))
+            return 17;
+        else if (std::isinf(d)) {
+            return (d>0)?13:5641;
+        };
+        double a = fabs(d);
+        if (a < 0.5) {
+            h = (uint32_t) log(a);
+            if (h==0)
+                h = 5639;
+            return h;
+        }
+        else if (a < (double)UINT_MAX/3 && a > -(double)UINT_MAX/3) {
+            h = ((intptr_t)sqrt(a)) + (intptr_t) log(a);
+            if (h != 0)
+                return h;
+        }
+        if (h == 0)
+            h = 5501;
+        return h;
     }
-    else if (a < (double)UINT_MAX/3 && a > -(double)UINT_MAX/3) {
-      h = ((intptr_t)sqrt(a)) + (intptr_t) log(a);
-      if (h != 0)
-	return h;
-    }
-    if (h == 0)
-      h = 5501;
-    return h;
-  }
-  fltruk_doubleV(double v=0)
-    : fltruk_Value(fltruk_Vtype::DoubleTy, hash_double(v),
-		   register_double_val(this, v),
-		   meth_double_dict), dval(v) {
-  };
-  double double_val (void) const { return dval; };
-};				// end struct fltruk_DoubleV
+    fltruk_DoubleV(double v=0)
+        : fltruk_Value(fltruk_Vtype::DoubleTy, hash_double(v),
+                       register_double_val(this, v),
+                       meth_double_dict), dval(v) {
+    };
+    double double_val (void) const {
+        return dval;
+    };
+};                              // end struct fltruk_DoubleV
 /********
  ** for GNU emacs...
  ** Local-Variables: ;;
