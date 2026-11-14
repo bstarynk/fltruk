@@ -164,12 +164,12 @@ fltruk_dlopen(const char*plugin, const char*arg)
                    fltruk_program_name(), plugin, arg);
     FILE* f = fopen(plugin, "rb");
     if (!f) {
-        FLTRUK_WARNING("% fltruk_dlopen failed to read plugin %s: %s",
+        FLTRUK_WARNING("%s fltruk_dlopen failed to read plugin %s: %s",
                        fltruk_program_name(), plugin, strerror(errno));
         return nullptr;
     };
     if (fread(buf, sizeof(buf), 1, f) == 0) {
-        FLTRUK_WARNING("% fltruk_dlopen failed to read first "
+        FLTRUK_WARNING("%s fltruk_dlopen failed to read first "
                        " %d bytes in plugin %s: %s",
                        fltruk_program_name(), (int)sizeof(buf),
                        plugin, strerror(errno));
@@ -178,7 +178,7 @@ fltruk_dlopen(const char*plugin, const char*arg)
     };
     if (buf[0] != EI_MAG0 || buf[1] != EI_MAG1
             || buf[2] != EI_MAG2 || buf[3] != EI_MAG3) {
-        FLTRUK_WARNING("% fltruk_dlopen bad plugin %s start",
+        FLTRUK_WARNING("%s fltruk_dlopen bad plugin %s start",
                        fltruk_program_name(), plugin);
         fclose(f);
         return nullptr;
@@ -186,13 +186,13 @@ fltruk_dlopen(const char*plugin, const char*arg)
     fclose(f), f= nullptr;
     void* dlh = dlopen(plugin, RTLD_NOW | RTLD_GLOBAL);
     if (!dlh) {
-        FLTRUK_WARNING("% fltruk_dlopen failed to dlopen plugin %s: %s",
+        FLTRUK_WARNING("%s fltruk_dlopen failed to dlopen plugin %s: %s",
                        fltruk_program_name(), plugin, dlerror());
         return nullptr;
     };
     void *iniad = dlsym(dlh, "fltruk_init");
     if (!iniad) {
-        FLTRUK_WARNING("% fltruk_dlopen failed to dlsym fltruk_init"
+        FLTRUK_WARNING("%s fltruk_dlopen failed to dlsym fltruk_init"
                        " in plugin %s: %s",
                        fltruk_program_name(), plugin, dlerror());
         dlclose(dlh);
@@ -200,7 +200,7 @@ fltruk_dlopen(const char*plugin, const char*arg)
     }
     bool ok =  (*(fltruk_init_rout_t*)iniad) (arg);
     if (!ok) {
-        FLTRUK_WARNING("% fltruk_dlopen failed to initialize plugin %s with arg %s",
+        FLTRUK_WARNING("%s fltruk_dlopen failed to initialize plugin %s with arg %s",
                        fltruk_program_name(), plugin, arg);
         dlclose(dlh);
         return nullptr;
