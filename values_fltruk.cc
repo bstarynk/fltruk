@@ -26,7 +26,7 @@
 extern "C" const char values_fltruk_git[] = FLTRUK_SHORTGIT;
 extern "C" const char values_fltruk_base[] = FLTRUK_BASE;
 
-extern "C" const unigned long fltruk_primetab[];
+extern "C" const uint64_t fltruk_primes_tab[];
 
 static std::vector<std::list<fltruk_Value*>> fltruk_scalar_vect;
 static std::vector<std::list<fltruk_Value*>> fltruk_composite_vect;
@@ -34,7 +34,7 @@ static std::atomic<unsigned> fltrk_nb_scalars;
 static std::atomic<unsigned> fltrk_nb_composites;
 
 
-unigned long fltruk_primetab[] = {
+const uint64_t fltruk_primes_tab[] = {
  2, 3, 5, 7,
  11, 13, 17, 19,
  23, 29, 31, 37,
@@ -109,9 +109,150 @@ unigned long fltruk_primetab[] = {
  2620920373, 2795648423, 2982025069, 3180826763,
  3392881901, 3619074031, 3860345639, 4117702019,
  4392215549, 4685029957, 4997365301, 5330523007,
- 5685891217, 6064950649,
+ 5685891217, 6064950649, 6469280711, 6900566093,
+ 7360603847,
   0
-};
+}; // end fltruk_primetab
+
+
+int64_t
+fltruk_prime_ranked (int rk)
+{
+  constexpr unsigned numprimes = sizeof (fltruk_primes_tab)
+    / sizeof (fltruk_primes_tab[0]);
+  if (rk < 0)
+    return 0;
+  if (rk < (int)numprimes)
+    return fltruk_primes_tab[rk];
+  return 0;
+} // end of fltruk_prime_ranked
+
+int64_t
+fltruk_prime_above (uint64_t n)
+{
+  constexpr unsigned numprimes = sizeof (fltruk_primes_tab)
+    / sizeof (fltruk_primes_tab[0]);
+  int lo = 0, hi = numprimes;
+  if (n >= fltruk_primes_tab[numprimes - 1])
+    return 0;
+  if (n < 2)
+    return 2;
+  while (lo + 8 < hi)
+    {
+      int md = (lo + hi) / 2;
+      if (fltruk_primes_tab[md] > n)
+        hi = md;
+      else
+        lo = md;
+    };
+  if (hi < (int) numprimes - 1)
+    hi++;
+  if (hi < (int) numprimes - 1)
+    hi++;
+  for (int ix = lo; ix < hi; ix++)
+    if (fltruk_primes_tab[ix] > n)
+      return fltruk_primes_tab[ix];
+  return 0;
+}
+
+int64_t
+fltruk_prime_greaterequal_ranked (uint64_t n, int*prank)
+{
+  constexpr unsigned numprimes = sizeof (fltruk_primes_tab)
+    / sizeof (fltruk_primes_tab[0]);
+  if (prank) *prank = -1;
+  int lo = 0, hi = numprimes;
+  if (n >= fltruk_primes_tab[numprimes - 1])
+    return 0;
+  if (n < 2)
+    return 2;
+  while (lo + 8 < hi)
+    {
+      int md = (lo + hi) / 2;
+      if (fltruk_primes_tab[md] > n)
+        hi = md;
+      else
+        lo = md;
+    };
+  if (hi < (int) numprimes - 1)
+    hi++;
+  if (hi < (int) numprimes - 1)
+    hi++;
+  for (int ix = lo; ix < hi; ix++)
+    if (fltruk_primes_tab[ix] >= n)
+      {
+        if (prank)
+          *prank =  ix;
+        return fltruk_primes_tab[ix];
+      }
+  return 0;
+} // end of fltruk_prime_greaterequal_ranked
+
+
+
+int64_t
+fltruk_prime_below (uint64_t n)
+{
+  constexpr unsigned numprimes =
+    sizeof (fltruk_primes_tab) / sizeof (fltruk_primes_tab[0]);
+  int lo = 0, hi = numprimes;
+  if (n >= fltruk_primes_tab[numprimes - 1])
+    return 0;
+  if (n < 2)
+    return 2;
+  while (lo + 8 < hi)
+    {
+      int md = (lo + hi) / 2;
+      if (fltruk_primes_tab[md] > n)
+        hi = md;
+      else
+        lo = md;
+    };
+  if (hi < (int) numprimes - 1)
+    hi++;
+  if (hi < (int) numprimes - 1)
+    hi++;
+  for (int ix = hi; ix >= 0; ix--)
+    if (fltruk_primes_tab[ix] < n)
+      return fltruk_primes_tab[ix];
+  return 0;
+} // end fltruk_prime_below
+
+
+int64_t
+fltruk_prime_lessequal_ranked (uint64_t n, int*prank)
+{
+  constexpr unsigned numprimes =
+    sizeof (fltruk_primes_tab) / sizeof (fltruk_primes_tab[0]);
+  if (prank) *prank = -1;
+  int lo = 0, hi = numprimes;
+  if (n >= fltruk_primes_tab[numprimes - 1])
+    return 0;
+  if (n < 2)
+    return 2;
+  while (lo + 8 < hi)
+    {
+      int md = (lo + hi) / 2;
+      if (fltruk_primes_tab[md] > n)
+        hi = md;
+      else
+        lo = md;
+    };
+  if (hi < (int) numprimes - 1)
+    hi++;
+  if (hi < (int) numprimes - 1)
+    hi++;
+  for (int ix = hi; ix >= 0; ix--)
+    if (fltruk_primes_tab[ix] <= n)
+      {
+        if (prank)
+          *prank = ix;
+        return fltruk_primes_tab[ix];
+      }
+  return 0;
+} // end fltruk_prime_lessequal_ranked
+
+
 fltruk_MethodDict fltruk_IntV::meth_int_dict("Int");
 uint16_t
 fltruk_IntV::register_int_val(struct fltruk_IntV*p, intptr_t i)
