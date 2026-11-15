@@ -32,6 +32,7 @@ volatile bool verbose_fltruk;
 static int fltruk_prog_argc;
 static const char**fltruk_prog_argv;
 
+static int fltruk_nbthreads;
 static std::string fltruk_curarg;
 static void
 usage_fltruk(void)
@@ -46,6 +47,8 @@ usage_fltruk(void)
               << "\t --arg | -A <ARGSTR>               # set argument for next plugin"
               << std::endl
               << "\t --plugin | -P <PLUGIN>            # dlopen this plugin"
+              << std::endl
+              << "\t --threads | -T <NBTHREADS>        # number of working threads"
               << std::endl
               << "\t                                   # call its fltruk_init function"
               << std::endl
@@ -63,6 +66,8 @@ version_fltruk(void)
               << "\t FLTK API: " << Fl::api_version() << std::endl;
     std::clog << "\t\t cf github.com/bstarynk/fltruk"
               << " & starynkevitch.net/Basile" << std::endl;
+    std::clog << "\t author: Basile STARYNKEVITCH <basile@starynkevitch.net>"
+                 " (France)" << std::endl;
 } // end version_fltruk
 
 /*** our arghandle_fltruk function should
@@ -134,13 +139,24 @@ arghandle_fltruk(int argc, char**argv, int &i)
             FLTRUK_WARNING("%s failed to run fltruk_init (%s) in plugin %s",
                            fltruk_program_name (), fltruk_curarg.c_str(),
                            plugin_name);
-            exit(EXIT_FAILURE);
+            exit (EXIT_FAILURE);
         }
         FLTRUK_VERBOSE("%s did run fltruk_init (%s) in plugin %s",
                        fltruk_program_name (), fltruk_curarg.c_str(),
                        plugin_name);
         i += 2;
         return 2;
+    }
+    else if (i+1<argc &&  (strcmp("-T", argv[i]) == 0
+                           || strcmp("--threads", argv[i]) == 0)) {
+        int nbthr = atoi(argv[i+1]);
+        if (nbthr < 2 || nbthr > 30) {
+            FLTRUK_WARNING("%s bad number of threads %d (should be > 2 and < 31)",
+                           fltruk_program_name(),
+                           nbthr);
+            exit (EXIT_FAILURE);
+        };
+        fltruk_nbthreads = nbthr;
     }
     return 0;
 } // end arghandle_fltruk
@@ -246,9 +262,12 @@ main(int argc, char**argv)
             return 0;
         };
     };
+    fltruk_initialize_values();
     int r = Fl::args(argc, argv, iarg, arghandle_fltruk);
     assert (r>=0);
+    Fl::lock ();
     fltruk_compile_plugins ();
+    Fl::run ();
     return 0;
 } // end main
 
