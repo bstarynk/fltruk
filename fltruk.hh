@@ -73,6 +73,7 @@ extern "C" volatile bool verbose_fltruk;
 extern "C" void* fltruk_dlopen(const char*plugin, const char*arg);
 extern "C" void* fltruk_dlsym(const char*symname);
 extern "C" int fltruk_nb_threads(void);
+extern "C" void fltruk_initialize_values(void);
 
 // every dlopened plugin should have a fltruk_init function of signature
 typedef bool fltruk_init_rout_t (const char*);

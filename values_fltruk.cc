@@ -27,9 +27,10 @@ extern "C" const char values_fltruk_git[] = FLTRUK_SHORTGIT;
 extern "C" const char values_fltruk_base[] = FLTRUK_BASE;
 
 
-fltruk_MethodDict fltruk_IntV::meth_int_dict;
+static std::vector<std::list<fltruk_Value*>> fltruk_scalar_vect;
+static std::vector<std::list<fltruk_Value*>> fltruk_composite_vect;
 
-#warning probably need a static vector of pointers to fltruk_IntV
+fltruk_MethodDict fltruk_IntV::meth_int_dict("Int");
 uint16_t
 fltruk_IntV::register_int_val(struct fltruk_IntV*p, intptr_t i)
 {
@@ -44,8 +45,7 @@ fltruk_IntV::register_int_val(struct fltruk_IntV*p, intptr_t i)
 
 
 
-#warning probably need a static vector of pointers to fltruk_DoubleV
-fltruk_MethodDict fltruk_DoubleV::meth_double_dict;
+fltruk_MethodDict fltruk_DoubleV::meth_double_dict("Double");
 
 uint16_t
 fltruk_DoubleV::register_double_val(struct fltruk_DoubleV*p, double x)
@@ -61,6 +61,15 @@ fltruk_DoubleV::register_double_val(struct fltruk_DoubleV*p, double x)
 
 
 
+void
+fltruk_initialize_values(void)
+{
+  static bool inited;
+  assert (!inited);
+  FLTRUK_WARNING("unimplemented fltruk_initialize_valuesé");
+  inited = true;
+#warning unimplemented fltruk_initialize_valuesé
+} // end fltruk_initialize_values
 
 /********
  ** for GNU emacs...
