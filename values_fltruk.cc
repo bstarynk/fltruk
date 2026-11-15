@@ -64,10 +64,10 @@ fltruk_DoubleV::register_double_val(struct fltruk_DoubleV*p, double x)
 void
 fltruk_initialize_values(void)
 {
-  static bool inited;
-  assert (!inited);
-  FLTRUK_WARNING("unimplemented fltruk_initialize_valuesé");
-  inited = true;
+    static bool inited;
+    assert (!inited);
+    FLTRUK_WARNING("unimplemented fltruk_initialize_valuesé");
+    inited = true;
 #warning unimplemented fltruk_initialize_valuesé
 } // end fltruk_initialize_values
 
