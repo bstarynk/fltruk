@@ -64,6 +64,12 @@ fltruk_compile_plugins(void)
         assert (entlen < ent->d_reclen && entlen > 0);
         if (ent->d_name[0] == '.' || ent->d_name[0] == '!')
             continue;
+        if (entlen < 4 || entlen>srclen+(int)sizeof(genpath))
+            continue;
+        if (ent->d_name[entlen-1] == '~')
+            continue;
+        if (ent->d_name[entlen-1] == '%')
+            continue;
         bool goodent = isalnum(ent->d_name[0]) || ent->d_name[0] == '_';
         for  (int i=0; i<entlen && goodent; i++)
             goodent =
@@ -74,8 +80,6 @@ fltruk_compile_plugins(void)
             FLTRUK_WARNING("in %s bad entry %s", genpath, ent->d_name);
             continue;
         }
-        if (entlen < 4 || entlen>srclen+(int)sizeof(genpath))
-            continue;
         if (ent->d_name[entlen-2] != '.'
                 && ent->d_name[entlen-1] != 'c')
             continue;
