@@ -48,6 +48,9 @@
 #include <iostream>
 #include <mutex>
 #include <variant>
+#include <vector>
+#include <list>
+#include <atomic>
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Box.H>
@@ -69,6 +72,7 @@ extern "C" void fltruk_compile_plugins(void);
 extern "C" volatile bool verbose_fltruk;
 extern "C" void* fltruk_dlopen(const char*plugin, const char*arg);
 extern "C" void* fltruk_dlsym(const char*symname);
+extern "C" int fltruk_nb_threads(void);
 
 // every dlopened plugin should have a fltruk_init function of signature
 typedef bool fltruk_init_rout_t (const char*);
@@ -165,6 +169,7 @@ typedef bool fltruk_marksig_t (struct fltruk_Value* val);
 
 struct fltruk_MethodDict {
     mutable std::recursive_mutex _mtx;
+    char _mdic_name[64];
     std::map<uint16_t, fltruk_methsig_t*> _dictmeth;
 #warning perhaps _markfun should be atomic?
     fltruk_marksig_t* _markfun;
@@ -182,9 +187,15 @@ struct fltruk_MethodDict {
     };
     void set_marking_fun(fltruk_marksig_t* mfun) {
         std::lock_guard<std::recursive_mutex> gu(_mtx);
+        if (_markfun) {
+        }
         _markfun = mfun;
     };
-    fltruk_MethodDict() : _mtx(), _dictmeth(), _markfun(nullptr) {};
+    fltruk_MethodDict(const char*name) : _mtx(), _dictmeth(), _markfun(nullptr) {
+        memset (_mdic_name, 0, sizeof(_mdic_name));
+        assert (name && strlen(name) < sizeof(_mdic_name));
+        strncpy (_mdic_name, name, sizeof(_mdic_name));
+    };
     ~fltruk_MethodDict() {
         std::lock_guard<std::recursive_mutex> gu(_mtx);
         _dictmeth.clear();
@@ -194,7 +205,7 @@ struct fltruk_MethodDict {
 struct fltruk_Value {
     const fltruk_Vtype _vtype;
 protected:
-    mutable uint8_t _vgc;
+    mutable std::atomic<uint8_t> _vgc;
 private:
     const uint16_t _vnum;
     const uint32_t _vhash;
@@ -219,6 +230,9 @@ protected:
         }
     };
 public:
+    uint8_t gc_mark(void) const {
+        return _vgc.load();
+    };
     fltruk_Vtype valtype(void) const {
         return _vtype;
     };
@@ -240,6 +254,7 @@ public:
 
 struct fltruk_IntV : fltruk_Value {
     const intptr_t ival;
+    // its _vnum relates to the list in fltruk_scalar_vect
     static fltruk_MethodDict meth_int_dict;
     static uint16_t register_int_val(struct fltruk_IntV*p, intptr_t i);
     static uint32_t hash_int(intptr_t i) {
@@ -258,8 +273,10 @@ struct fltruk_IntV : fltruk_Value {
     };
 };                              // end struct fltruk_IntV
 
+extern "C" fltruk_IntV* fltruk_make_int(intptr_t i);
 
 struct fltruk_DoubleV : fltruk_Value {
+    // its _vnum relates to the list in fltruk_scalar_vect
     const double  dval;
     static fltruk_MethodDict meth_double_dict;
     static uint16_t register_double_val(struct fltruk_DoubleV*p,
