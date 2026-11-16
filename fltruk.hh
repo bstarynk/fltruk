@@ -263,9 +263,10 @@ struct fltruk_IntV : fltruk_Value {
     static fltruk_MethodDict meth_int_dict;
     static uint16_t register_int_val(struct fltruk_IntV*p, intptr_t i);
     static uint32_t hash_int(intptr_t i) {
-        uint32_t h = (h*4637) ^ (i>>10);
+        uint32_t h = (uint32_t)((i*4637) ^ (i>>10));
         if (h == 0)
             h = (i & 0xfff) + 11;
+        assert (h>0);
         return h;
     }
     fltruk_IntV(intptr_t v=0)
