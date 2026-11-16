@@ -68,7 +68,7 @@ obj/%.so: generated/%.cc fltruk.hh | GNUmakefile get-short-git.sh
              -c $< -fPIC -shared -o $@
 
 fltruk: $(OBJECTFILES) obj/_listfiles_.o | GNUmakefile
-	$(CXX) $(OPTIM) -g $(OBJECTFILES) obj/_listfiles_.o $(shell fltk-config --ldflags) -o $@
+	$(CXX) $(OPTIM) -g $(OBJECTFILES) obj/_listfiles_.o $(shell fltk-config --ldflags) -lunistring -o $@
 
 #obj/main-fltruk.o: main-fltruk.cc
 
