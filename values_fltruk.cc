@@ -30,9 +30,12 @@ extern "C" const char values_fltruk_base[] = FLTRUK_BASE;
 
 extern "C" const uint64_t fltruk_primes_tab[];
 
+static std::recursive_mutex fltruk_scalar_mtx;
 static std::vector<std::list<fltruk_Value*>> fltruk_scalar_vect;
-static std::vector<std::list<fltruk_Value*>> fltruk_composite_vect;
 static std::atomic<unsigned> fltrk_nb_scalars;
+
+static std::recursive_mutex fltruk_composite_mtx;
+static std::vector<std::list<fltruk_Value*>> fltruk_composite_vect;
 static std::atomic<unsigned> fltrk_nb_composites;
 
 
@@ -265,6 +268,8 @@ uint16_t
 fltruk_IntV::register_int_val(struct fltruk_IntV*p, intptr_t i)
 {
     assert(p != nullptr && p->valtype() == fltruk_Vtype::IntTy);
+    uint32_t h = fltruk_IntV::hash_int(i);
+    assert (h>0);
 #warning unimplemented fltruk_IntV::register_int_val
     FLTRUK_VERBOSE("in register_int_val p@%p i=%ld",
                    (void*)p, (long)i);
@@ -273,7 +278,31 @@ fltruk_IntV::register_int_val(struct fltruk_IntV*p, intptr_t i)
     throw std::runtime_error("register_int_val");
 } // end fltruk_IntV::register_int_val
 
-
+const fltruk_IntV*
+fltruk_make_int(intptr_t i)
+{
+    fltruk_IntV*res = nullptr;
+    uint32_t h = fltruk_IntV::hash_int(i);
+    assert (h > 0);
+    std::lock_guard gu(fltruk_scalar_mtx);
+    size_t vlen = fltruk_scalar_vect.size();
+    assert (vlen > 0 && vlen<USHRT_MAX);
+    std::list<fltruk_Value*>& lis = fltruk_scalar_vect.at(h % vlen);
+    for (auto it: lis) {
+        const fltruk_Value* p = it;
+        assert (p != nullptr);
+        if (p->valtype() == fltruk_Vtype::IntTy) {
+            const fltruk_IntV* pi = reinterpret_cast<const fltruk_IntV*>(p);
+            if (pi->int_val() == i)
+                return pi;
+        }
+    }
+    res = new fltruk_IntV(i);
+    lis.push_back(res);
+    fltrk_nb_scalars.fetch_add(1);
+    res->_vnum = h % vlen;
+    return res;
+} // end fltruk_make_int
 
 fltruk_MethodDict fltruk_DoubleV::meth_double_dict("Double");
 
