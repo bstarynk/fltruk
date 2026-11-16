@@ -264,12 +264,19 @@ fltruk_prime_lessequal_ranked (uint64_t n, int*prank)
 
 
 fltruk_MethodDict fltruk_IntV::meth_int_dict("Int");
+
 uint16_t
 fltruk_IntV::register_int_val(struct fltruk_IntV*p, intptr_t i)
 {
+    // this is called by the constructor, whih is called by fltruk_make_int
     assert(p != nullptr && p->valtype() == fltruk_Vtype::IntTy);
     uint32_t h = fltruk_IntV::hash_int(i);
     assert (h>0);
+    std::lock_guard gu(fltruk_scalar_mtx);
+    size_t vlen = fltruk_scalar_vect.size();
+    assert (vlen > 0 && vlen<USHRT_MAX);
+    uint16_t ix = h % vlen;
+    std::list<fltruk_Value*>& lis = fltruk_scalar_vect.at(ix);
 #warning unimplemented fltruk_IntV::register_int_val
     FLTRUK_VERBOSE("in register_int_val p@%p i=%ld",
                    (void*)p, (long)i);
@@ -361,6 +368,22 @@ fltruk_StringV::hash_string(const std::string str)
         h = bytsiz+1;
     return h;
 } // end fltruk_StringV::hash_string
+
+extern "C" fltruk_marksig_t fltruk_mark_scalar;
+constexpr unsigned fltruk_nb_scalar_mtx = 256;
+extern "C" std::recursive_mutex fltruk_scalar_array_mtx[fltruk_nb_scalar_mtx];
+std::recursive_mutex fltruk_scalar_array_mtx[fltruk_nb_scalar_mtx];
+bool
+fltruk_mark_scalar(struct fltruk_Value* val, struct fltruk_GarbCollData*gcd)
+{
+    assert (val);
+    assert (gcd);
+    uint16_t vnum = val->valnum();
+    assert (vnum < fltruk_nb_scalar_mtx);
+    std::lock_guard<std::recursive_mutex> gu(fltruk_scalar_array_mtx[vnum]);
+    uint8_t vgc = val->gc_fetch_mark_or(1);
+    return vgc | 1;
+} // end fltruk_mark_scalar
 
 void
 fltruk_initialize_values(void)
