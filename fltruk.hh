@@ -171,12 +171,15 @@ typedef void fltruk_methsig_t (uint16_t /*selector*/,
                                fltruk_Variant);
 
 typedef bool fltruk_marksig_t (struct fltruk_Value* val, struct fltruk_GarbCollData*gcd);
-
+typedef bool fltruk_copysig_t (struct fltruk_Value* dest, const struct fltruk_Value&src);
+typedef size_t fltruk_sizesig_t (const struct fltruk_Value& val);
 struct fltruk_MethodDict {
     mutable std::recursive_mutex _mtx;
     char _mdic_name[64];
     std::map<uint16_t, fltruk_methsig_t*> _dictmeth;
     std::atomic<fltruk_marksig_t*> _markfun;
+    std::atomic<fltruk_sizesig_t*> _sizefun;
+    std::atomic<fltruk_copysig_t*> _copyfun;
     fltruk_methsig_t* find_meth(uint16_t selnum) const {
         if (selnum == 0)
             return nullptr;
@@ -191,11 +194,27 @@ struct fltruk_MethodDict {
     };
     void set_marking_fun(fltruk_marksig_t* mfun) {
         std::lock_guard<std::recursive_mutex> gu(_mtx);
-        if (_markfun) {
-        }
-        _markfun = mfun;
+        _markfun.store(mfun);
     };
-    fltruk_MethodDict(const char*name) : _mtx(), _dictmeth(), _markfun(nullptr) {
+    void set_sizing_function(fltruk_sizesig_t* sfun) {
+        std::lock_guard<std::recursive_mutex> gu(_mtx);
+        _sizefun.store(sfun);
+    };
+    void set_copying_function(fltruk_copysig_t* cfun) {
+        std::lock_guard<std::recursive_mutex> gu(_mtx);
+        _copyfun.store(cfun);
+    };
+    void set_marking_sizing_copying_functions(fltruk_marksig_t* mfun,
+            fltruk_sizesig_t* sfun,
+            fltruk_copysig_t* cfun)
+    {
+        std::lock_guard<std::recursive_mutex> gu(_mtx);
+        _markfun.store(mfun);
+        _sizefun.store(sfun);
+        _copyfun.store(cfun);
+    };
+    fltruk_MethodDict(const char*name)
+        : _mtx(), _dictmeth(), _markfun(nullptr), _sizefun(nullptr), _copyfun(nullptr) {
         memset (_mdic_name, 0, sizeof(_mdic_name));
         assert (name && strlen(name) < sizeof(_mdic_name));
         strncpy (_mdic_name, name, sizeof(_mdic_name));
@@ -213,7 +232,8 @@ protected:
     mutable uint16_t _vnum;
 private:
     const uint32_t _vhash;
-    const std::shared_ptr<fltruk_MethodDict> _vmethdict;
+    // was: const std::shared_ptr<fltruk_MethodDict> _vmethdict;
+    const fltruk_MethodDict* _vmethdict;
 protected:
     fltruk_Value(fltruk_Vtype ty, uint16_t num,
                  uint32_t hash, fltruk_MethodDict&mdict)
@@ -222,6 +242,14 @@ protected:
         assert (ty > fltruk_Vtype::_Notype
                 && ty < fltruk_Vtype::_LastTy);
         assert (num > 0);
+        assert (hash > 0);
+    };
+    fltruk_Value(fltruk_Vtype ty, nullptr_t,
+                 uint32_t hash, fltruk_MethodDict&mdict)
+        : _vtype(ty), _vgc(0), _vnum(0), _vhash(hash),
+          _vmethdict(&mdict) {
+        assert (ty > fltruk_Vtype::_Notype
+                && ty < fltruk_Vtype::_LastTy);
         assert (hash > 0);
     };
     ~fltruk_Value() {
@@ -233,9 +261,20 @@ protected:
                fltruk_Variant((void*)nullptr));
         }
     };
+    fltruk_Value(const fltruk_Value&v);
+    fltruk_Value& operator= (const fltruk_Value&v);
 public:
     uint8_t gc_mark(void) const {
         return _vgc.load();
+    };
+    uint8_t gc_fetch_mark_or(uint8_t u) {
+        return _vgc.fetch_or(u);
+    };
+    uint8_t gc_fetch_mark_xor(uint8_t u) {
+        return _vgc.fetch_xor(u);
+    };
+    uint8_t gc_fetch_mark_and(uint8_t u) {
+        return _vgc.fetch_and(u);
     };
     fltruk_Vtype valtype(void) const {
         return _vtype;
@@ -274,10 +313,10 @@ struct fltruk_IntV : fltruk_Value {
         return ival;
     };
 protected:
-    fltruk_IntV(intptr_t v=0)
-        : fltruk_Value(fltruk_Vtype::IntTy, hash_int(v),
-                       register_int_val(this, v),
+    fltruk_IntV(intptr_t v=0, uint32_t h=0)
+        : fltruk_Value(fltruk_Vtype::IntTy, nullptr, h?h:hash_int(v),
                        meth_int_dict), ival(v) {
+        _vnum = register_int_val(this, v);
     };
 };                              // end struct fltruk_IntV
 
@@ -318,8 +357,8 @@ struct fltruk_DoubleV : fltruk_Value {
         return dval;
     };
 protected:
-    fltruk_DoubleV(double v=0)
-        : fltruk_Value(fltruk_Vtype::DoubleTy, hash_double(v),
+    fltruk_DoubleV(double v=0.0, uint32_t h=0)
+        : fltruk_Value(fltruk_Vtype::DoubleTy, h?h:hash_double(v),
                        register_double_val(this, v),
                        meth_double_dict), dval(v) {
     };
