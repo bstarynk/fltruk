@@ -6,9 +6,11 @@
  *
  * Description:
  *      This file is the included header file of fltruk
- *      © Copyright (C) 2026, Basile Starynkevitch, France
+ *      © Copyright (C) 2026, Basile STARYNKEVITCH, France
  *       <basile@starynkevitch.net>
  * It is GPLv3+ licensed (or CeCILL in France)
+ *
+ * Source code on https://github.com/bstarynk/fltruk/
  *
  * License: GPLv3+ (file COPYING-GPLv3)
  *    This software is free software: you can redistribute it and/or modify
@@ -138,6 +140,7 @@ struct fltruk_NodeV;
 struct fltruk_FltkV;
 struct fltruk_ObjectV;
 struct fltruk_Value;
+struct fltruk_GarbCollData;
 
 
 enum class fltruk_Selector: uint16_t {
@@ -166,14 +169,13 @@ typedef void fltruk_methsig_t (uint16_t /*selector*/,
                                struct fltruk_Value*,
                                fltruk_Variant);
 
-typedef bool fltruk_marksig_t (struct fltruk_Value* val);
+typedef bool fltruk_marksig_t (struct fltruk_Value* val, struct fltruk_GarbCollData*gcd);
 
 struct fltruk_MethodDict {
     mutable std::recursive_mutex _mtx;
     char _mdic_name[64];
     std::map<uint16_t, fltruk_methsig_t*> _dictmeth;
-#warning perhaps _markfun should be atomic?
-    fltruk_marksig_t* _markfun;
+    std::atomic<fltruk_marksig_t*> _markfun;
     fltruk_methsig_t* find_meth(uint16_t selnum) const {
         if (selnum == 0)
             return nullptr;
@@ -213,7 +215,7 @@ private:
     const std::shared_ptr<fltruk_MethodDict> _vmethdict;
 protected:
     fltruk_Value(fltruk_Vtype ty, uint16_t num,
-                 uint32_t hash,fltruk_MethodDict&mdict)
+                 uint32_t hash, fltruk_MethodDict&mdict)
         : _vtype(ty), _vgc(0), _vnum(num), _vhash(hash),
           _vmethdict(&mdict) {
         assert (ty > fltruk_Vtype::_Notype
@@ -252,6 +254,7 @@ public:
 };                              // end struct fltruk_Value
 
 
+extern "C" const fltruk_IntV* fltruk_make_int(intptr_t i);
 
 struct fltruk_IntV : fltruk_Value {
     const intptr_t ival;
@@ -274,7 +277,8 @@ struct fltruk_IntV : fltruk_Value {
     };
 };                              // end struct fltruk_IntV
 
-extern "C" fltruk_IntV* fltruk_make_int(intptr_t i);
+
+extern "C" const fltruk_DoubleV* fltruk_make_double(double x);
 
 struct fltruk_DoubleV : fltruk_Value {
     // its _vnum relates to the list in fltruk_scalar_vect
@@ -314,6 +318,28 @@ struct fltruk_DoubleV : fltruk_Value {
         return dval;
     };
 };                              // end struct fltruk_DoubleV
+
+extern "C" const struct fltruk_StringV* fltruk_make_string(const std::string);
+
+struct fltruk_StringV : fltruk_Value {
+    const std::string strval;
+    // its _vnum relates to the list in fltruk_scalar_vect
+    static fltruk_MethodDict meth_string_dict;
+    static uint16_t register_string_val(struct fltruk_StringV*p, const std::string s);
+    static uint32_t hash_string(const std::string str);
+    fltruk_StringV(const std::string&str)
+        : fltruk_Value(fltruk_Vtype::StringTy, hash_string(str),
+                       register_string_val(this, str),
+                       meth_string_dict), strval(str) {
+    };
+    const std::string str_val (void) const {
+        return strval;
+    };
+};                              // end struct fltruk_StringV
+
+
+
+
 /********
  ** for GNU emacs...
  ** Local-Variables: ;;
