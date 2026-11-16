@@ -53,6 +53,7 @@
 #include <vector>
 #include <list>
 #include <atomic>
+#include <unistr.h>             // GNU libunistring
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Box.H>
