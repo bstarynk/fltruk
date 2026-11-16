@@ -8,6 +8,8 @@
  *       <basile@starynkevitch.net>
  * It is GPLv3+ licensed (or CeCILL in France)
  *
+ * Source code on https://github.com/bstarynk/fltruk/
+ *
  * License: GPLv3+ (file COPYING-GPLv3)
  *    This software is free software: you can redistribute it and/or modify
  *    it under the terms of the GNU General Public License as published by
