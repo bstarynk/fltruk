@@ -307,6 +307,31 @@ fltruk_StringV::register_string_val(struct fltruk_StringV*p, const std::string s
 } // end fltruk_StringV::register_string_val
 
 
+uint32_t
+fltruk_StringV::hash_string(const std::string str)
+{
+    uint32_t h=0;
+    const char* ps = str.c_str();
+    size_t bytsiz = str.size();
+    const char* pend = ps + bytsiz;
+    if (u8_check ((const uint8_t*)ps, bytsiz))
+    {
+        FLTRUK_WARNING("bad (non UTF8) string %s", ps);
+        return 0;
+    };
+    while (ps && ps < pend && *ps) {
+        ucs4_t uc = 0xfffd;
+        int nb = u8_mbtouc (&uc, (const uint8_t*)ps, pend-ps);
+        if (nb<0 || uc==0xffffd)
+            return 0;
+        assert (nb>0);
+        h = (349 * uc) ^ (h+11+7*(pend - ps));
+        ps += nb;
+    };
+    if (h == 0)
+        h = bytsiz+1;
+    return h;
+} // end fltruk_StringV::hash_string
 
 void
 fltruk_initialize_values(void)
