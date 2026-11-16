@@ -382,7 +382,7 @@ fltruk_mark_scalar(struct fltruk_Value* val, struct fltruk_GarbCollData*gcd)
     assert (vnum < fltruk_nb_scalar_mtx);
     std::lock_guard<std::recursive_mutex> gu(fltruk_scalar_array_mtx[vnum]);
     uint8_t vgc = val->gc_fetch_mark_or(1);
-    return vgc | 1;
+    return bool(vgc & 1);
 } // end fltruk_mark_scalar
 
 void
