@@ -210,8 +210,8 @@ struct fltruk_Value {
     const fltruk_Vtype _vtype;
 protected:
     mutable std::atomic<uint8_t> _vgc;
+    mutable uint16_t _vnum;
 private:
-    const uint16_t _vnum;
     const uint32_t _vhash;
     const std::shared_ptr<fltruk_MethodDict> _vmethdict;
 protected:
@@ -258,6 +258,7 @@ public:
 extern "C" const fltruk_IntV* fltruk_make_int(intptr_t i);
 
 struct fltruk_IntV : fltruk_Value {
+    friend const fltruk_IntV* fltruk_make_int(intptr_t i);
     const intptr_t ival;
     // its _vnum relates to the list in fltruk_scalar_vect
     static fltruk_MethodDict meth_int_dict;
@@ -269,13 +270,14 @@ struct fltruk_IntV : fltruk_Value {
         assert (h>0);
         return h;
     }
+    intptr_t int_val (void) const {
+        return ival;
+    };
+protected:
     fltruk_IntV(intptr_t v=0)
         : fltruk_Value(fltruk_Vtype::IntTy, hash_int(v),
                        register_int_val(this, v),
                        meth_int_dict), ival(v) {
-    };
-    intptr_t int_val (void) const {
-        return ival;
     };
 };                              // end struct fltruk_IntV
 
@@ -283,6 +285,7 @@ struct fltruk_IntV : fltruk_Value {
 extern "C" const fltruk_DoubleV* fltruk_make_double(double x);
 
 struct fltruk_DoubleV : fltruk_Value {
+    friend  const fltruk_DoubleV* fltruk_make_double(double x);
     // its _vnum relates to the list in fltruk_scalar_vect
     const double  dval;
     static fltruk_MethodDict meth_double_dict;
@@ -311,31 +314,36 @@ struct fltruk_DoubleV : fltruk_Value {
             h = 5501;
         return h;
     }
+    double double_val (void) const {
+        return dval;
+    };
+protected:
     fltruk_DoubleV(double v=0)
         : fltruk_Value(fltruk_Vtype::DoubleTy, hash_double(v),
                        register_double_val(this, v),
                        meth_double_dict), dval(v) {
     };
-    double double_val (void) const {
-        return dval;
-    };
 };                              // end struct fltruk_DoubleV
+
+
 
 extern "C" const struct fltruk_StringV* fltruk_make_string(const std::string);
 
 struct fltruk_StringV : fltruk_Value {
+    friend const struct fltruk_StringV* fltruk_make_string(const std::string);
     const std::string strval;
     // its _vnum relates to the list in fltruk_scalar_vect
     static fltruk_MethodDict meth_string_dict;
     static uint16_t register_string_val(struct fltruk_StringV*p, const std::string s);
     static uint32_t hash_string(const std::string str);
+    const std::string str_val (void) const {
+        return strval;
+    };
+protected:
     fltruk_StringV(const std::string&str)
         : fltruk_Value(fltruk_Vtype::StringTy, hash_string(str),
                        register_string_val(this, str),
                        meth_string_dict), strval(str) {
-    };
-    const std::string str_val (void) const {
-        return strval;
     };
 };                              // end struct fltruk_StringV
 
