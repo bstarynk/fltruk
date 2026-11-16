@@ -8,6 +8,8 @@
  *       <basile@starynkevitch.net>
  * It is GPLv3+ licensed (or CeCILL in France)
  *
+ * Source code on https://github.com/bstarynk/fltruk
+ *
  * License: GPLv3+ (file COPYING-GPLv3)
  *    This software is free software: you can redistribute it and/or modify
  *    it under the terms of the GNU General Public License as published by
@@ -285,7 +287,24 @@ fltruk_DoubleV::register_double_val(struct fltruk_DoubleV*p, double x)
     asm volatile("nop; nop; nop; nop");
     fflush(nullptr);
     throw std::runtime_error("register_double_val");
-} // end fltruk_IntV::register_double_val
+} // end fltruk_DoubleV::register_double_val
+
+
+
+
+fltruk_MethodDict fltruk_StringV::meth_string_dict("String");
+
+uint16_t
+fltruk_StringV::register_string_val(struct fltruk_StringV*p, const std::string s)
+{
+    assert(p != nullptr && p->valtype() == fltruk_Vtype::StringTy);
+#warning unimplemented fltruk_StringV::register_string_val
+    FLTRUK_VERBOSE("in register_string_val pd@%p s='%s'",
+                   (void*)p, s.c_str());
+    asm volatile("nop; nop; nop; nop");
+    fflush(nullptr);
+    throw std::runtime_error("register_string_val");
+} // end fltruk_StringV::register_string_val
 
 
 
